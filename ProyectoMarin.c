@@ -1,4 +1,3 @@
-//hola
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,7 +18,7 @@ typedef struct Bateria
 	int nPersonas;
 	int Nivel;
 	Persona *inicio;
-	Persona *ultimo;
+	struct Persona *ultimo;
 	struct Bateria *siguiente;
 }Bateria;
 
@@ -29,7 +28,7 @@ typedef struct Estacion
 	int ID;
 	int nPersonas;
 	int nBaterias;
-	Bateria *tope;
+	struct Bateria *tope;
 	struct Estacion *siguiente;
 }Estacion;
 
@@ -56,6 +55,22 @@ void ImprimirEstaciones(Estacion **InicioEstacion){
 	return(ImprimirEstaciones(&(*InicioEstacion)->siguiente));
 }
 
+void MostrarBaterias(Bateria **tope){
+	if(!(*tope)){
+		return;
+	}
+	if((*tope)->nPersonas>0){
+        printf("\nNivel: %d - Humanos: %d\n",(*tope)->Nivel,(*tope)->nPersonas );
+    }
+	MostrarBaterias(&(*tope)->siguiente);
+}
+void ImprimirHumanos (Persona **inicio, Persona **ultimo){
+	printf("\nID: %d - Nombre: %s - Edad: %d\n",(*inicio)->ID, (*inicio)->Nombre, (*inicio)->edad );
+	if((*inicio) ==(*ultimo))
+		return;
+	return (ImprimirHumanos(&(*inicio)->siguiente,ultimo));
+
+}
 //FIN IMPRESIONES
 
 //ALOJAMIENTOS
@@ -93,23 +108,6 @@ void CrearBateria(Bateria **tope){
 	(*tope)=NBateria;
 	printf("Nivel %d de bateria creado.\n",NBateria->Nivel );
 }
-
-//FIN ALOJAMIENTOS
-
-//BUSQUEDAS
-
-Estacion * BuscarEstacion( Estacion **InicioEstacion,int ID){
-	if(!(*InicioEstacion))
-		return NULL;
-	if((*InicioEstacion)->ID==ID)
-		return ((*InicioEstacion));
-	return (BuscarEstacion(&(*InicioEstacion)->siguiente,ID));
-}
-
-//FIN BUSQUEDAS
-
-//REGISTROS
-
 void IngresarHumano(Bateria **tope, char nombre[30],char sexo,int edad){
  Persona *NuevaPersona= (Persona*) malloc(sizeof(Persona));
  if(!NuevaPersona){
@@ -131,9 +129,33 @@ void IngresarHumano(Bateria **tope, char nombre[30],char sexo,int edad){
  printf("%s - Ingresado a la capsula correctamente.\n",nombre );
  ++(*tope)->nPersonas;
 }
+//FIN ALOJAMIENTOS
 
+//ELIMINAR
+int eliminarHumano(Persona **inicio, Persona **ultimo, int IDHumano){
+    if((*inicio)>(*ultimo))
+        return 0;
+    if((*inicio)->ID == IDHumano){
+        Persona *aux = (*inicio);
+        (*inicio) = (*inicio)->siguiente;
+        free(aux);
+        return 1;
+    }
+    return eliminarHumano(&(*inicio)->siguiente,&(*ultimo),IDHumano);
+}
+//FIN ELIMINAR
+//BUSQUEDAS
 
-//FIN REGISTROS
+Estacion * BuscarEstacion( Estacion **InicioEstacion,int ID){
+	if(!(*InicioEstacion))
+		return NULL;
+	if((*InicioEstacion)->ID==ID)
+		return ((*InicioEstacion));
+	return (BuscarEstacion(&(*InicioEstacion)->siguiente,ID));
+}
+
+//FIN BUSQUEDAS
+
 //ORDENAMIENTOS
 void ordenarCola(Persona **inicio){
     int bandera = 0;
@@ -199,13 +221,60 @@ int VerifiPila(Estacion *InicioEstacion){
 	push(&InicioEstacion->tope,aux);
 	return 2;
 }
+int eliminarHumanoBateria(Bateria **tope,int nivel, int IDHumano){
+	if(!(*tope))
+		return 0;
+	if((*tope)->Nivel == nivel){
+		if(eliminarHumano(&(*tope)->inicio,&(*tope)->ultimo,IDHumano) == 1){
+            (*tope)->nPersonas--;
+            return 1;
+        }
+    }
+	return(eliminarHumanoBateria(&(*tope)->siguiente,nivel,IDHumano));
+}
 
+int SelecNivel(Bateria **tope,int Nivel){
+	if(!(*tope))
+		return 0;
+	if((*tope)->Nivel == Nivel && (*tope)->nPersonas > 0)
+		return 1;
+	return(SelecNivel(&(*tope)->siguiente,Nivel));
+}
+
+void VerifiBateria(Bateria **tope, int sbateria){
+	Bateria *aux;
+	if(!(*tope)){
+		return;
+	}
+	if((*tope)->Nivel == sbateria){
+		ImprimirHumanos(&(*tope)->inicio,&(*tope)->ultimo);
+		return;
+	}
+	push(&aux,pop(tope));
+	VerifiBateria(tope,sbateria);
+	push(tope,aux);
+}
 //FIN VERIFICADORES
-
-
+void MenuBaterias( Estacion *InicioEstacion, int sbateria){
+	int IDHumano;
+        printf(" -------------------------------- ");
+        printf("\n|  HUMANOS REGISTRADOS.         |");
+        printf("\n -------------------------------- ");
+        VerifiBateria(&InicioEstacion->tope,sbateria);
+        printf("\nSeleccione el ID del humano a eliminar: ");
+        scanf("%d",&IDHumano);
+        if(eliminarHumanoBateria(&InicioEstacion->tope,sbateria,IDHumano) == 1){
+            printf("\nHumano eliminado con exito!\n");
+            InicioEstacion->nPersonas--;
+            system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+        }else{
+            printf("\nNo se ha seleccionado un humano valido.\n");
+            system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+        }
+}
 
 void MenuEstacion(Estacion *InicioEstacion){
-   int op;
+   int op,sbateria;
     do{
         printf(" -------------------------------- ");
         printf("\n|  BIENVENIDO A LA ESTACION %d.    |",InicioEstacion->ID);
@@ -213,7 +282,7 @@ void MenuEstacion(Estacion *InicioEstacion){
         printf("\n|1.-INGRESAR HUMANO.             |");
         printf("\n|2.-ELIMINAR HUMANO.             |");
         printf("\n|3.-ELIMINAR NIVEL.              |");
-        printf("\n|4.-SALIR                        |");
+        printf("\n|4.-REGRESAR                     |");
         printf("\n -------------------------------- ");
         printf("\nElija una opci%cn: ",162);
         scanf("%d",&op);
@@ -238,6 +307,26 @@ void MenuEstacion(Estacion *InicioEstacion){
                 break;
         case 2:
                 system("clear");
+                if(!(InicioEstacion)->tope){
+                	printf("No se han registrado baterias\n");
+
+                }
+                else if(InicioEstacion->nPersonas>0){
+				        printf(" -------------------------------- ");
+				        printf("\n|  BATERIAS.                    |");
+				        printf("\n -------------------------------- ");
+				        MostrarBaterias(&InicioEstacion->tope);
+				        printf("\nIngresa el nivel al que quieres acceder: ");
+				        scanf("%d",&sbateria);
+				        if(SelecNivel(&InicioEstacion->tope,sbateria)==0){
+				        	printf("No se ingreso un nivel valido\n");
+				        	system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+				        }else
+				        	MenuBaterias(InicioEstacion,sbateria);
+                }else{
+                    printf("No existen humanos en las baterias.\n");
+                    system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+                }
                 //system("cls");
                 //EliminarHumano(&InicioEstacion->tope);
                 break;
@@ -263,7 +352,7 @@ void MenuMatrix(Estacion **InicioEstacion){
         printf("\n -------------------------------- ");
         printf("\n|1.-INGRESAR ESTACION.            |");
         printf("\n|2.-ADMINISTRAR ESTACION          |");
-        printf("\n|3.-SALIR                         |");
+        printf("\n|3.-REGRESAR                      |");
         printf("\n -------------------------------- ");
         printf("\nElija una opci%cn: ",162);
         scanf("%d",&op);
@@ -357,3 +446,4 @@ int main(int argc, char const *argv[])
     }while(op!=3);
 	return 0;
 }
+
