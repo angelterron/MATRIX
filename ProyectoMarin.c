@@ -10,7 +10,7 @@ typedef struct Persona
 	int ID;
 	int edad;
 	char Sexo;
-	Persona *siguiente;
+	struct Persona *siguiente;
 }Persona;
 
 typedef struct Bateria
@@ -19,7 +19,7 @@ typedef struct Bateria
 	int Nivel;
 	Persona *inicio;
 	Persona *ultimo;
-	Bateria *siguiente;
+	struct Bateria *siguiente;
 }Bateria;
 
 
@@ -29,7 +29,7 @@ typedef struct Estacion
 	int nPersonas;
 	int nBaterias;
 	Bateria *tope;
-	Estacion *siguiente;
+	struct Estacion *siguiente;
 }Estacion;
 
 //FUNCIONES PILA
@@ -133,7 +133,25 @@ void IngresarHumano(Bateria **tope, char nombre[30],char sexo,int edad){
 
 
 //FIN REGISTROS
-
+//ORDENAMIENTOS
+void ordenarCola(Persona **inicio){
+    int bandera = 0;
+    if(!(*inicio)->siguiente){
+        return;
+    }
+    if((*inicio)->edad > (*inicio)->siguiente->edad){
+        bandera = 1;
+        Persona *aux=(*inicio),*aux1=(*inicio)->siguiente;
+        (*inicio)=(*inicio)->siguiente;
+        (*inicio)->siguiente=aux;
+        (*inicio)->siguiente->siguiente=aux1;
+    }
+    ordenarCola(&(*inicio)->siguiente);
+    if(bandera == 1){
+        ordenarCola(inicio);
+    }
+}
+//FIN ORDENAMIENTOS
 //MENUS
 
 void MenuIngresarHumano(Estacion *InicioEstacion){
@@ -150,7 +168,7 @@ void MenuIngresarHumano(Estacion *InicioEstacion){
 	scanf("%d",&edad);
 	do{
 		printf("Deseas ingresarlo a la capsula (1 - SI, 2 - NO):  ");
-		scanf("%d",&op);	
+		scanf("%d",&op);
 		if(op==1){
 			IngresarHumano(&(InicioEstacion)->tope,nombre,sexo,edad);
 			InicioEstacion->nPersonas++;
@@ -161,7 +179,7 @@ void MenuIngresarHumano(Estacion *InicioEstacion){
 		}
 	}while(op>3);
 
-	
+
 }
 
 //VERIFICADORES
@@ -222,7 +240,7 @@ void MenuEstacion(Estacion *InicioEstacion){
                 //system("cls");
                 //EliminarHumano(&InicioEstacion->tope);
                 break;
-        case 3: 
+        case 3:
         		//EliminarNivel(&InicioEstacion->tope);
         		break;
 
@@ -253,7 +271,7 @@ void MenuMatrix(Estacion **InicioEstacion){
                 system("clear");
                 //system("cls");
                 CrearEstacion(InicioEstacion);
-                
+
                 break;
         case 2:
                 system("clear");
@@ -263,7 +281,7 @@ void MenuMatrix(Estacion **InicioEstacion){
 							return;
 						}
 						int ID;
-						
+
 					        printf(" -------------------------------- ");
 					        printf("\n|  ESTACIONES.                        |");
 					        printf("\n -------------------------------- ");
@@ -273,7 +291,7 @@ void MenuMatrix(Estacion **InicioEstacion){
 					        scanf("%d",&ID);
 					        aux=BuscarEstacion(InicioEstacion,ID);
 					    if(ID!=0 && aux!=NULL)
-                		{	
+                		{
                 			system("clear");
                 			MenuEstacion(aux);}
                 		else{
