@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 int IDE=0,IDB=0,IDP=0, impresiones = 0;
 
@@ -43,7 +44,14 @@ void push(Bateria **tope,Bateria *dato){
     dato->siguiente = (*tope);
     (*tope) = dato;
 }
-
+// Minusculas a Mayusculas
+void minustomayus(char *p){
+  while( *p ) {
+  *p=toupper( *p );
+  p++;
+  }
+}
+//FIN MAM
 //IMPRESIONES
 
 void ImprimirEstaciones(Estacion **InicioEstacion){
@@ -93,7 +101,7 @@ void filtrarBateria(Bateria **tope, char nombre[30], int ID){
 }
 void imprimirFiltrado(Estacion **InicioEstacion, char nombre[30]){
     if(!(*InicioEstacion))
-        return; 
+        return;
     filtrarBateria(&(*InicioEstacion)->tope,nombre,(*InicioEstacion)->ID);
     return imprimirFiltrado(&(*InicioEstacion)->siguiente,nombre);
 
@@ -162,7 +170,7 @@ void IngresarHumano(Bateria **tope, char nombre[30],char sexo,int edad){
  NuevaPersona->edad=edad;
  NuevaPersona->siguiente = NULL;
  NuevaPersona->ID=++IDP;
- if((*tope)->inicio==NULL){   
+ if((*tope)->inicio==NULL){
     (*tope)->inicio=(*tope)->ultimo=NuevaPersona;
     NuevaPersona->siguiente=NuevaPersona;
  }
@@ -191,7 +199,7 @@ int eliminarHumano(Persona **inicio, Persona **ultimo, int IDHumano){
         free(aux);
         return 1;
     }
-    if((*ultimo)->ID == IDHumano){       
+    if((*ultimo)->ID == IDHumano){
         Persona *aux = (*ultimo);
         (*ultimo) = (*inicio);
         free (aux);
@@ -208,7 +216,7 @@ void EliminarNivel(Persona **inicio){
         return;
     Persona *aux = (*inicio);
     (*inicio) = (*inicio)->siguiente;
-    free(aux); 
+    free(aux);
     return EliminarNivel(&(*inicio)->siguiente);
 }
 //FIN ELIMINAR
@@ -242,7 +250,7 @@ Persona * RescatarBateria(Bateria **tope,int ID, char nombre[30]){
     Persona *auxP;
     if(!(*tope))
         return NULL;
-    if((auxP= recorrerCapsulas(&(*tope)->inicio,&(*tope)->ultimo,ID,nombre ))!= NULL){ 
+    if((auxP= recorrerCapsulas(&(*tope)->inicio,&(*tope)->ultimo,ID,nombre ))!= NULL){
         (*tope)->nPersonas--;
         return auxP;
         }
@@ -293,9 +301,11 @@ void MenuIngresarHumano(Estacion *InicioEstacion){
     printf("Ingresa el nombre del humano: ");
     scanf("%[^\n]",nombre);
     while(getchar()!='\n');
+    minustomayus(nombre);
     printf("Ingresa el Sexo ( M - F ):  ");
     scanf("%c",&sexo);
     while(getchar()!='\n');
+    sexo = toupper(sexo);
     printf("Ingresa la edad: ");
     scanf("%d",&edad);
     do{
@@ -351,7 +361,7 @@ void eliminarNivelBateria(Estacion **InicioEstacion,int nivel){
     if((*InicioEstacion)->tope->Nivel == nivel){
         if((*InicioEstacion)->tope->inicio != (*InicioEstacion)->tope->ultimo){
             (*InicioEstacion)->tope->ultimo->siguiente=NULL;
-            EliminarNivel(&(*InicioEstacion)->tope->inicio);    
+            EliminarNivel(&(*InicioEstacion)->tope->inicio);
         }else
             free((*InicioEstacion)->tope->inicio);
         (*InicioEstacion)->nPersonas= (*InicioEstacion)->nPersonas - (*InicioEstacion)->tope->nPersonas;
@@ -495,7 +505,7 @@ void MenuEstacion(Estacion *InicioEstacion){
                     system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
                 }
                 break;
-        case 4: 
+        case 4:
                 system("clear");
                 if(!(InicioEstacion)->tope)
                     printf("No se han registrado baterias\n");
@@ -609,6 +619,7 @@ void MenuAyuda(Estacion **InicioEstacion, Persona **ayudantes){
         printf("\nA quien buscas?: ");
         while(getchar()!='\n');
         scanf("%[^\n]",nombre);
+        minustomayus(nombre);
         imprimirFiltrado(InicioEstacion,nombre);
         if(impresiones == 0){
             printf("No existe la persona buscada :(.\n");
