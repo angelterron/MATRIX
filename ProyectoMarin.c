@@ -124,10 +124,14 @@ void CrearBateria(Bateria **tope){
         printf("No se pudo reservar la memoria\n");
         return;
     }
+
+
     if(!(*tope))
         NBateria->Nivel=0;
-    else
-    NBateria->Nivel=++(NBateria)->Nivel;
+    else{
+        int naux=(*tope)->Nivel;
+        NBateria->Nivel=++naux;
+    }
     NBateria->nPersonas=0;
     NBateria->inicio=NULL;
     NBateria->ultimo=NULL;
@@ -401,8 +405,26 @@ void MenuBaterias( Estacion *InicioEstacion, int sbateria){
         system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
 }
 
+void RotarHumanos(Bateria **tope){
+    Bateria *aux;
+    if(!(*tope))
+        return;
+    (*tope)->inicio=(*tope)->inicio->siguiente;
+    (*tope)->ultimo=(*tope)->ultimo->siguiente;
+    push(&aux,pop(tope));
+    RotarHumanos(tope);
+    push(tope,aux);
+}
+
 void MenuEstacion(Estacion *InicioEstacion){
    int op,sbateria;
+   if((InicioEstacion)->tope !=NULL){
+    system("clear");
+    printf("ROTANDO A HUMANOS EN BATERIAS... \n");
+    RotarHumanos(&InicioEstacion->tope);
+    system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+    printf("\n");
+   }
     do{
         printf(" -------------------------------- ");
         printf("\n|  BIENVENIDO A LA ESTACION %d.    |",InicioEstacion->ID);
@@ -410,7 +432,8 @@ void MenuEstacion(Estacion *InicioEstacion){
         printf("\n|1.-INGRESAR HUMANO.             |");
         printf("\n|2.-ELIMINAR HUMANO.             |");
         printf("\n|3.-ELIMINAR NIVEL.              |");
-        printf("\n|4.-REGRESAR                     |");
+        printf("\n|4.-MOSTRAR HUMANOS              |");
+        printf("\n|5.-REGRESAR                     |");
         printf("\n -------------------------------- ");
         printf("\nElija una opci%cn: ",162);
         scanf("%d",&op);
@@ -472,12 +495,39 @@ void MenuEstacion(Estacion *InicioEstacion){
                     system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
                 }
                 break;
-        case 4: break;
+        case 4: 
+                system("clear");
+                if(!(InicioEstacion)->tope)
+                    printf("No se han registrado baterias\n");
+                else if(InicioEstacion->nPersonas>0){
+                        printf(" -------------------------------- ");
+                        printf("\n|  BATERIAS.                    |");
+                        printf("\n -------------------------------- ");
+                        MostrarBaterias(&InicioEstacion->tope);
+                        printf("\nIngresa el nivel al que quieras acceder: ");
+                        scanf("%d",&sbateria);
+                        if(SelecNivel(&InicioEstacion->tope,sbateria)==0){
+                            printf("No se ingreso un nivel valido\n");
+                            system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+                        }else
+                                system("clear");
+                                printf(" -------------------------------- ");
+                                printf("\n|  HUMANOS REGISTRADOS.         |");
+                                printf("\n -------------------------------- ");
+                            VerifiBateria(&InicioEstacion->tope,sbateria);
+                            printf("\n");
+                }else{
+                    printf("No existen humanos en las baterias.\n");
+                    system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+                }
+                system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+                break;
+        case 5: break;
         default:
                 printf("\nOpci%cn no valida.\n",162);
         }
     system("clear");
-    }while(op!=4);
+    }while(op!=5);
 }
 
 void MenuMatrix(Estacion **InicioEstacion){
@@ -560,8 +610,11 @@ void MenuAyuda(Estacion **InicioEstacion, Persona **ayudantes){
         while(getchar()!='\n');
         scanf("%[^\n]",nombre);
         imprimirFiltrado(InicioEstacion,nombre);
-        if(impresiones == 0)
+        if(impresiones == 0){
             printf("No existe la persona buscada :(.\n");
+            system("read -n 1 -s -p \"Presiona una tecla para continuar...\"");
+            return;
+        }
         impresiones = 0;
         while(getchar()!='\n');
         printf("\nA quien rescataras?: \n");
